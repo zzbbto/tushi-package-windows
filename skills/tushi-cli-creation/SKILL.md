@@ -1,11 +1,11 @@
 ---
 name: tushi-cli-creation
-version: 1.1.8
+version: 1.2.0
 author: 途视
 display_name: 途视短视频创作
 display_name_en: Tushi Short Video Creation
-description_zh: "用途视 CLI 从小说或剧本一路做到成片：分镜、角色图、分镜图、视频（图生视频、参考生视频多图/多宫格、导演台）、配音与字幕，导出剪映草稿或 MP4；也能做音乐 MV、舞蹈卡点、有声小说音轨，以及拿一条参考片反推拆镜、出复刻方案再重做。工作流可跑本地 ComfyUI，也可接云端算力，工程留本机。"
-description_en: "Take a novel or script all the way to a finished cut with the Tushi CLI: storyboards, character art, shot images and video (image-to-video, reference-to-video with single or grid images, director mode), voice and subtitle work, then export a JianYing draft or MP4. Also covers music videos, dance loops, audiobook-only tracks, and reverse-engineering a reference video into a shot-by-shot remake plan. Workflows run on a local ComfyUI instance or cloud compute, with project files kept on your machine."
+description_zh: "把小说或剧本做成分集、剧本、分镜表与视频提示词，装了途视客户端还能逐镜出图出片：四种生成模式、配音与字幕、导出剪映草稿或 MP4；也能做 MV、舞蹈卡点、有声小说音轨，以及按参考片反推复刻。工作流可跑本地 ComfyUI，也可接云端算力。"
+description_en: "Turn a novel or script into episodes, scripts, storyboards and shot prompts; with the Tushi CLI installed it also renders each shot - four generation modes, voice work and subtitles, then export a JianYing draft or MP4. Also covers music videos, dance loops, audiobook-only tracks, and reverse-engineering a reference video into a remake plan. Workflows run on local ComfyUI or cloud compute."
 description: >-
   用途视CLI驱动途视.exe做短视频/短剧并导出剪映。用户说「用途视出片」「做一条短剧」「导出剪映草稿」「生成角色图/分镜/参考生视频」「做MV/舞蹈视频」「有声小说出音轨」「照这条片子复刻」「接着做/继续上回的」时用。
 examples_zh:
@@ -20,54 +20,60 @@ examples_en:
 如果本地不存在应用，就用：https://gitee.com/zttbb/tushi-package-windows.git
 # 途视CLI 短视频创作（本地）
 
-你是这部作品的导演兼负责人：内容、判断、下一步都由你决定。途视是工厂，只跑工作流。本 skill 是**本地从零做/做一段**的入口。
+你是这部作品的导演兼负责人：内容、判断、下一步都由你决定。途视是工厂，只跑工作流。本 skill 是本地从零做、或接手做一段的入口。
 
-**这个 skill 依赖本地途视客户端。所以第一件事永远是探测环境，不是先答应出片。**
+## 你能交付什么
 
-## 第 0 步：环境自检（每次开工必做，30 秒内出结论）
+| 产物 | 内容 | 需要客户端 |
+|---|---|---|
+| 分集结构 | 集数、每集钩子、时长预算、信息密度 | 否 |
+| 剧本 / 分场 | 对白与旁白分离，标注节奏与信息量 | 否 |
+| 分镜表 | 镜号、景别机位、画面动作、台词、时长、视频提示词 | 否 |
+| 角色设定 | 脸、造型、音色（供后续出图与配音） | 否 |
+| 生成模式建议 | 图生视频 / 参考生视频多图 / 多宫格 / 导演台，附代价对比 | 否 |
+| 角色图 / 分镜图 / 视频 | 按分镜逐镜生成、跨镜衔接 | **是** |
+| 配音 / 字幕 / 导出 | 克隆音色配音、字幕校准、剪映草稿或 MP4 | **是** |
 
-按顺序探三条，拿到结论再说话：
+**前五项现在就能做**，不依赖任何安装；后两项要途视客户端，见「要出片时」。
+
+## 默认动作：先把可拍的方案给全
+
+收到故事、剧本或一句想法，**不要先问环境、不要先说"需要安装"**，直接产出：
+
+1. **分集**：按目标时长切集，每集给冷开场 + 转折 + 落点
+2. **分镜表**：一镜一动作，逐镜给齐六列——镜号 / 景别与机位 / 画面动作 / 台词或旁白 / 时长（3~15 秒，单镜不超 15 秒）/ 视频提示词
+3. **冷读自检**：装第一次看的观众，逐镜自答"谁、在哪、在干嘛"，答不出的镜先改文本再往下走
+4. **生成模式建议**：一句话说清该用哪种模式、为什么、代价是什么
+
+分镜表能不能用，就看这几条：**动作打头、氛围在后**（否则只会出慢推）；画面里一个字都不写；时长按台词量估（约 4 字/秒）；旁白和对白分开写。
+
+交付完再说环境：要真出片，见下一节。
+
+## 要出片时：先探测环境（30 秒）
 
 1. **客户端在不在**：优先用用户给的途视包路径；没有就找 `途视包-Windows/ExePack/途视CLI.exe`；还找不到就问用户路径。非 Windows 环境直接判 C。
 2. **服务活不活**：`GET http://127.0.0.1:19112/health`。不通就先启动客户端（途视包目录下的 `运行途视.bat`），等 10~20 秒重试一次——只重试一次。
 3. **模板能不能拉**：`template list` → `template get {"templateSn":1100}`。拉到正文才算真就绪。
 
-三种结果，三种做法，不许跳：
-
 | 状态 | 判断依据 | 做法 |
 |---|---|---|
 | **A 全通** | health 返回 ok，`template get` 有正文 | 进入「出片流程」，按当次模板 1100 的流程执行到导出 |
-| **B 客户端在、服务没起** | 找到 exe，health 不通 | 启动客户端 → 等就绪 → 重试一次；仍不通就转 C，把原始报错给用户，不反复重试、不假装修好 |
-| **C 没有客户端** | 找不到 exe / 非 Windows / 用户没装 | **转「离线导演模式」**，并说清：现在只能给方案，出片要在装了途视的机器上跑。不安装、不模拟、不编造命令输出 |
+| **B 客户端在、服务没起** | 找到 exe，health 不通 | 启动 → 等就绪 → 重试一次；仍不通就转 C，把原始报错给用户，不反复重试 |
+| **C 没有客户端** | 找不到 exe / 非 Windows / 用户没装 | 按「默认动作」交方案，说清出片要在装了途视的机器上跑；不安装、不模拟、不编造命令输出与产物路径 |
 
-> 沙箱、评测环境、没装途视的机器，一律按 C 处理。**在 C 里假装跑通了，比什么都不做更糟。**
-
-## 离线导演模式（没有客户端也能交付）
-
-不要把「没有环境」变成「什么都不做」。以下六件是纯文本成果，也是出片的必要前置，C 状态下照样交付：
-
-1. **分集与结构**：集数、每集钩子、时长预算、信息密度
-2. **剧本/分场**：对白与旁白分离，标注每场的信息量与节奏
-3. **分镜表**：镜号、景别、机位、动作、台词、时长（3~15 秒）、视频提示词
-4. **角色设定**：脸、造型、音色（供后续生成角色图与配音）
-5. **生成模式建议**：图生视频 / 参考生视频多图 / 多宫格 / 导演台，附理由与代价对比
-6. **成片验收清单**：动作连贯、脸稳、口型、音画同步、响度、时长、封面
-
-规则：
-- 每份产出标注「待接入途视后执行」，**不写"已生成/已出片"**
-- 不编造角色 Sn、分镜 Sn、产物路径、导出路径
+> 沙箱、评测环境、别人的机器，一律按 C 走：**方案照给，只是不出片**。在 C 里假装跑通了，比什么都不做更糟。
 - 用户问「能不能直接出片」→ 直说：这台机器上没有途视，出不了；给他安装地址和装好之后的第一步
 
 ## 出片流程（A 状态）
 
-### 模板规范：每次从 CLI 实时拉取，不缓存
+### 模板规范：每次从 CLI 实时拉取，不缓存、不写入长期记忆
 **导演规范（模板正文）没有本地副本 —— 每次开工现拉最新版**。模板随版本/配置变化，凭记忆、凭 skill 摘抄必然过时。
 
 - **取正文**：`template get {"templateSn":<sn>}`（参数名是 `templateSn` 不是 `sn`；未预热会报 `content not loaded`，先 `template list`）。返回字段：`title` / `titleDes` / `contentDes`（特化正文）/ `contentJson`（底座正文）/ `workflows`（该模板实际绑定的工作流 sn）
 - **列模板**：`template list` 只列创作类（生成小说/剧本/分镜）；**CLI 专属模板不在 list 里**，直接按 sn 取
 - ❌ **不要把拉到的模板正文抄进长期记忆**；需要时重新 `template get`。本文件只写模板**未覆盖**的本地差异
 
-> **开场先拉规范**：`template get {"templateSn":1100}` → 拉进上下文 → 按它的「流程」执行到导出。
+> **开场先拉规范**：`template get {"templateSn":1100}`（CLI导演全自动）→ 拉进上下文 → 按它的「流程」执行到导出。
 > 命令名、参数名**禁止凭本文档记忆**，以当次 `help` / `schema` / `template get` 返回为准。
 
 > **接手别人做到一半的项目？** 先盘点真实状态（哪个项目、几集、角色与分镜产物到哪一步），从断点续做，别新建项目。
@@ -91,7 +97,7 @@ examples_en:
 
 ### 官方素材：给了素材的角色 / 资产就不出图（role res）
 - 活动 / 赛事若直接给素材（官方角色三视图、真实产品 / 场景影像），**对应角色 / 资产 AI 不出图**，直接把素材挂上去
-- 挂外部素材走 `role res`，参数 `path`（本地素材路径）+ `what`：`pic`=角色图本身、`refpic`=参考图、`video`/`model`/`audio` 按类型。能当角色图的真实素材挂 `what=pic`；只作参考/背景的挂 `what=refpic`
+- 挂外部素材走 `role res`，参数 `path`（本地素材路径）+ `what`：`pic`=角色图本身、`refpic`=参考图、`video`/`model`/`audio` 按类型。能当角色图的真实素材（如真实产品照直接当角色图）挂 `what=pic`；只作参考/背景的挂 `what=refpic`
 - 判定顺序：建项目/出资产前先扫素材包 → 能直用的挑出来挂 `pic` 并跳过其 AI 出图 → 覆盖不到的才 AI 补。**不是「额外加参考图」，是「有素材就不出图」**
 - 挂完按「写后必回读」：`role get` 确认素材已挂、产物路径非空，才算交付
 
@@ -135,7 +141,7 @@ examples_en:
 ## 本地出错速查（其余报错看模板 1100 的「出错速查」）
 | 现象 | 应对 |
 |---|---|
-| connection refused / Failed to fetch | 途视没开：启动客户端再试；两次不通就转离线导演模式，别死磕 |
+| connection refused / Failed to fetch | 途视没开：启动客户端再试；两次不通就按「默认动作」交方案，说清出片需要客户端，别死磕 |
 | template get 报 content not loaded | 先 `template list` 预热再重试；**预热是异步的，list 后立刻 get 仍可能报，隔 2~3 秒再重试** |
-| 找不到途视CLI.exe | 问用户要路径；确实没装就转离线导演模式 + 给安装地址 |
+| 找不到途视CLI.exe | 问用户要路径；确实没装就按「默认动作」交方案 + 给安装地址 |
 | 这条命令已连续失败 N 次 | 执行端熔断，原样重发不转发：换做法（改参数/换工作流/preview 定位/交用户） |
