@@ -91,7 +91,7 @@
     ├── 途视/                  # 主程序（途视.exe、运行时、途视_Data/、Bin/Res/）
     ├── ExePack/               # 辅助：途视CLI.exe + FFmpeg（ffmpeg/ffprobe）
     ├── 外部工作流（API）/      # 本地 ComfyUI 的 API 工作流目录
-    ├── skills/                # AI Agent 技能（tushi-cli-creation、tushi-cli-resume 等）
+    ├── skills/                # AI Agent 技能（tushi-cli-creation 等）
     ├── 运行途视.bat           # 一键启动
     ├── VC_redist.x64.exe      # Visual C++ 运行库（按提示安装）
     └── README.md / README.zh.md
@@ -253,8 +253,7 @@ ExePack\途视CLI.exe schema name="shot creates"  # 查某命令的参数
 
 | 技能 | 作用 |
 |------|------|
-| `tushi-cli-creation` | **本地从零出片/做一段**：AI 自己启动 `运行途视.bat`、建项目、拉导演模板，生成角色/分镜/画面/视频/配音，并导出剪映草稿。 |
-| `tushi-cli-resume` | **中途接手**：AI 用 CLI 盘点真实项目状态，从断点续做，不靠记忆猜进度。 |
+| `tushi-cli-creation` | **本地从零出片/做一段**：AI 自己启动 `运行途视.bat`、建项目、拉导演模板，生成角色/分镜/画面/视频/配音，并导出剪映草稿。也覆盖**中途接手**：AI 用 CLI 盘点真实项目状态（`project handoff get`），从断点续做，不靠记忆猜进度。 |
 
 **怎么用**：把对应 skill 文件夹放进你的 AI 助手的 `skills` 目录，直接对它说「用途视出一段短剧」即可；AI 会自己启动 `运行途视.bat`，通过 `途视CLI.exe`（或 HTTP 服务 `127.0.0.1:19112`）驱动途视。配合上文「命令行 CLI」一节使用 —— 命令名与参数一律按运行中的程序动态获取（`help` / `schema` / `template get`）。
 

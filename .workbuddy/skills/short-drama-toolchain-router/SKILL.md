@@ -149,8 +149,7 @@ agent_created: true
 
 | 技能 | 用途 |
 |---|---|
-| `tushi-cli-creation` | ⑤ 出片：出图 / 出视频 / 配音 / 配乐 / 导出剪映 |
-| `tushi-cli-resume` | 断点续跑途视任务 |
+| `tushi-cli-creation` | ⑤ 出片：出图 / 出视频 / 配音 / 配乐 / 导出剪映；断点续跑也走它（`project handoff get/set`） |
 | `playwright-install` | 浏览器环境 |
 
 **现装**（用到时再装，装完的实际技能名如下）：

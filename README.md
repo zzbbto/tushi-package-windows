@@ -91,7 +91,7 @@
     ├── 途视/                  # main app: 途视.exe + runtime + 途视_Data/ + Bin/Res/
     ├── ExePack/               # helpers: 途视CLI.exe + FFmpeg (ffmpeg / ffprobe)
     ├── 外部工作流（API）/      # API-workflow folders for local ComfyUI
-    ├── skills/                # AI-agent skills (tushi-cli-creation, tushi-cli-resume, …)
+    ├── skills/                # AI-agent skills (tushi-cli-creation, …)
     ├── 运行途视.bat           # one-click launch
     ├── VC_redist.x64.exe      # Visual C++ runtime (install if prompted)
     └── README.md / README.zh.md
@@ -245,8 +245,7 @@ The package bundles a set of **AI-agent skills** (`skills/`) that let an AI assi
 
 | Skill | What it does |
 |-------|--------------|
-| `tushi-cli-creation` | From-scratch production (local). The AI launches 运行途视.bat, creates the project, pulls the director template, generates characters / shots / images / video / voice-over, and exports a JianYing draft. |
-| `tushi-cli-resume` | Take over a half-finished project. The AI reads the real project state through the CLI and continues from the breakpoint — no guessing. |
+| `tushi-cli-creation` | From-scratch production (local). The AI launches 运行途视.bat, creates the project, pulls the director template, generates characters / shots / images / video / voice-over, and exports a JianYing draft. Also covers taking over a half-finished project: it reads the real project state through the CLI (`project handoff get`) and continues from the breakpoint — no guessing. |
 
 **How to use**: copy the skill folder into your AI assistant's skills directory, then simply say something like *"用途视出一段短剧."* The AI will start 运行途视.bat itself and drive 途视 through 途视CLI.exe (or the HTTP service at `127.0.0.1:19112`). Pairs with the CLI section above — command names & parameters are always introspected at runtime (`help` / `schema` / `template get`).
 
