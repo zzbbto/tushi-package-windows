@@ -1,6 +1,6 @@
 ---
 name: tushi-cli-creation
-version: 1.2.0
+version: 1.2.3
 author: 途视
 display_name: 途视短视频创作
 display_name_en: Tushi Short Video Creation
@@ -92,7 +92,8 @@ examples_en:
 - ⚠️ **分镜是真实数据源，对位必做清单（硬门，不读纸面）**：核对分镜/旁白/配音/时长/镜组对位时，一律用 `shot get` / `shot list` 从途视读**实际分镜**（含 `DialogueName`/`Dialogue`/`Time`/产物路径）。**不要读 AI 自己生成的分镜表、旁白稿反推**——那些是生成时快照。**每批出片/核对成片前必做**：① `shot list` 拉全镜 Sn/Time；② `shot get` 逐镜读 `Dialogue`/`Time`/产物路径；③ 与纸面分镜表逐项对（时长、字数配比、镜序、是否有产物），不一致先修（`shot set`/重跑）再继续
 - ⚠️ **写后必回读，不落盘不算交付**：任何脚本/命令生成了分镜/角色/旁白/产物，**完成判定 = 回读读到才算数**，不能只看返回 `ok:true`。分镜用 `shot get`/`shot list` 回读、角色用 `role get`、文档先读文件确认非空——**回读为空 = 没交付 = 停下重做**
 - 断点留档：每阶段跑完 `project handoff set` 写「做了啥/差哪步/下一步」，章节结束必写；新窗口先 `project handoff get` 读断点，再按断点续做，不重建
-- **工作流本地 / 云端二选一**：执行端可以是本机 ComfyUI，也可以是云端算力，靠 `setting get/list` 里的配置决定——`ComfyUrlAPI`（本地 ComfyUI 地址）、`ComfyRunningHubKey` / `ComfyRunningHubModelAPIKey`（云端算力与模型 API）、`ZhenZhenAIKey`（另一家云端）。**开工前先 `setting get` 看清当前跑在哪、额度够不够**，别默认本地；切云端时素材会上传，敏感素材先问用户
+- **工作流本地 / 云端二选一**：执行端可以是本机 ComfyUI，也可以是云端算力，靠 `setting get/list` 里的配置决定（key 就是 `ProjectWorkflowPathSetting` 的字段名，`setting list` 会连 `note` 中文说明一起返回）——`ComfyUrlAPI`（本地 ComfyUI 地址）、`ComfyRunningHubKey` / `ComfyRunningHubKeyAbroad`（云端算力，国内/国外两套）、`ComfyRunningHubModelAPIKey`（模型 API）、`ZhenZhenAIKey`（另一家云端）、`IsAbroad`（true=国外平台，false=国内）、`UseRHAPIChannel` / `UseRHWebChannel`（API/网页通道开关，各有国内/国外一份）、`MaxRHRunTime` / `MaxRHAPIRunTime`（并发上限）、`ProjectPath`（素材缓存目录）、`ProjectDraftPath`（剪映草稿目录，返回里带 `resolved`/`source`）。**开工前先 `setting get` 看清当前跑在哪、额度够不够**，别默认本地；切云端时素材会上传，敏感素材先问用户。`setting set` 只收 `key`+`content`：开关填 `true/false`，数值填整数。⚠️ `setting list` 里 Key/Token 是掩码（`e9aa…bb4b(len=32)`，带 `masked:true`），要明文只能 `setting get <key>` 单取，别把整串凭据写进断点/文档；有 CLI 任务在跑时改 `IsAbroad`/通道开关/Key 会被拒（运行中切换会让在跑的 job 用错 key 轮询，先 `shot stop`/`role stop` 或等结束）
+- **云端 Key 没配的官方口径看 `system status`**：返回里 `missingSettings[]`（每项 `key`/`name`/`getUrl`）列出未配置的云端 Key（RunningHub 国内/国外站、贞贞AI；两个站各自独立、**都会列出**，跟当前 `IsAbroad` 切在哪一站无关），`note` 里带「打开哪个网址拿 + 用 `setting set` 怎么填」。为空就是都配好了；有值就**把 `getUrl` 原样给用户去网站获取**（别自己拼、别删查询串），拿到后 `setting set` 填入——**不要凭空编 Key，也不要 Key 为空时硬跑生成**
 - 写入途视的最终分镜，以途视 CLI 当次拉到的模板分镜规则为准
 
 ### 官方素材：给了素材的角色 / 资产就不出图（role res）
@@ -104,7 +105,7 @@ examples_en:
 ## 接手项目：先盘点，再续做（不靠记忆、不猜进度）
 用户说「接着做」「继续上回的」「这项目做到哪了」时走这条。途视把角色/分镜/产物持久化在项目里，CLI 能实时读出来——**盘点比回忆可靠**。
 
-1. **连上**：`system status` 确认 `loggedIn=true`（没登录先 `login`）
+1. **连上**：`system status` 确认 `loggedIn=true`
 2. **找项目**：`project list` → 挑真名
 3. **读交接**：`project handoff get {"projectName":"<真名>"}`（`content` 空 = 还没写过）
 4. **看进度**：`project progress` + `shot list` + `role list`（后两个按章节 key 分组，分镜与角色共用同一套 key）；要产物路径就对具体项 `shot get` / `role get`（每次最多 3 条）
@@ -112,7 +113,7 @@ examples_en:
 
 | 缺什么 | 续做什么 |
 |---|---|
-| 没建项目 | 空项目 → `workflow temp set` → `project key add`（先建章节）→ `role creates`（场景/角色/道具每项都必须带 `baseName`，不能为空；没有形态变化就填 `name`）→ `shot creates` |
+| 没建项目 | 空项目 → `workflow temp set` → `project key add`（先建章节）→ `role creates`（场景/角色/道具每项都必须带 `baseName`，不能为空；没有形态变化就填 `name`。`promptBase` 人物/道具必填，场景可选——场景要走基准工作流时填环境基准描述）→ `shot creates` |
 | 角色/场景没图 | 人物角色两步：① `run preview` → `role gen` 文生图「基准白底图四视图」（读 `promptBase` 提示词基准：脸型/五官/发型/饰品），产物落 `参考图`（`refPic`）→ ② `role gen` 图生图「一键四视图白底图」（输入 `参考图`=人脸 + `prompt`=衣着，输出 `配图`），第二步产物才是角色图；场景走正常文生图（输出配图）；人物和道具（类型 人物/其它）都先跑「基准白底图四视图」（绑 `promptBase`，输出参考图）——人物继续第二步图生图，道具类型自动落 `curPic`，确认 `curPic` 有图后无变体即完成，有变体再图生图改状态。同一角色换装：复用原形态 `refPic` 人脸参考（`role res` 设到新形态的 `refpic`），**不要重跑脸图，也不要用旧全身图**；同主体按 `baseName` 识别（同一主体的所有形态传同一个 `baseName`），纯换装建议 `promptBase` 与原形态一致。跨集同一角色：每集在各自章节建同名同形态角色，形象一致用 `role copy` 继承原图（含 `refPic`） |
 | 分镜没图 | 角色已绑且有图 → `run preview` → `shot gen`（融合工作流）；风格/分辨率不对先 `workflow customize set` / `workflow param set` |
 | 分镜没视频 | `shot set` 设 `time`（时长）→ `run preview` → `shot gen`（视频工作流） |
