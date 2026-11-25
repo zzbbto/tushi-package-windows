@@ -88,7 +88,7 @@ examples_en:
 - Windows 终端（PowerShell/cmd）**用单引号把整个 JSON 参数包住**，否则引号被吞；Git Bash 乱码先 `chcp 65001`
 - ⚠️ **agent 环境里 CLI exe 的 stdout 会被吞（跑了但无输出）** → 改打它的 HTTP 服务：`POST http://127.0.0.1:19112/command`，body 为 `{"cmd":"<命令>","args":{<参数>}}`（如 `{"cmd":"template get","args":{"templateSn":1100}}`）；`GET /health` 探活。**注意 HTTP 的 `cmd` 是字符串、参数要嵌在 `args` 下**，与 exe 的 `cmd 位置参数 + JSON` 写法不同，别混用
 - 产物经 HTTP 接口获取：`http://127.0.0.1:19112/file?path=<产物路径>`（图片/视频/音频都走这个接口，视频大文件也适用），不要直接读本地大文件
-- `shot get` / `role get` 每次最多 3 条（返回带产物路径）；`role list` 返回 roleSn+name+type（场景/人物/其它），**没有产物路径，不要编造**，详情用 `role get`
+- `shot get` / `role get` 每次最多 3 条（返回带产物路径）；`role list` 返回 roleSn+name+`baseName`+type+`promptBase`+`curPic`+`refPic`（场景/人物/其它），`baseName`=同主体基准名（同一角色不同形态相同，用于同主体识别），`curPic`=完整形象/变体产物、`refPic`=基准图参考（人物=人脸，道具=基准图），可据此判断两步出图进度；路径为空就是没有，**不要编造**，更多详情用 `role get`
 - ⚠️ **分镜是真实数据源，对位必做清单（硬门，不读纸面）**：核对分镜/旁白/配音/时长/镜组对位时，一律用 `shot get` / `shot list` 从途视读**实际分镜**（含 `DialogueName`/`Dialogue`/`Time`/产物路径）。**不要读 AI 自己生成的分镜表、旁白稿反推**——那些是生成时快照。**每批出片/核对成片前必做**：① `shot list` 拉全镜 Sn/Time；② `shot get` 逐镜读 `Dialogue`/`Time`/产物路径；③ 与纸面分镜表逐项对（时长、字数配比、镜序、是否有产物），不一致先修（`shot set`/重跑）再继续
 - ⚠️ **写后必回读，不落盘不算交付**：任何脚本/命令生成了分镜/角色/旁白/产物，**完成判定 = 回读读到才算数**，不能只看返回 `ok:true`。分镜用 `shot get`/`shot list` 回读、角色用 `role get`、文档先读文件确认非空——**回读为空 = 没交付 = 停下重做**
 - 断点留档：每阶段跑完 `project handoff set` 写「做了啥/差哪步/下一步」，章节结束必写；新窗口先 `project handoff get` 读断点，再按断点续做，不重建
@@ -112,8 +112,8 @@ examples_en:
 
 | 缺什么 | 续做什么 |
 |---|---|
-| 没建项目 | 空项目 → `workflow temp set` → `project key add`（先建章节）→ `role creates` → `shot creates` |
-| 角色/场景没图 | `run preview` → `role gen`；同一角色换形态（变装/变龄）必须图生图：`role res` 把原图设 `refpic` 再 gen。跨集同一角色：每集在各自章节建角色，形象一致用 `role copy` 继承原图，形象不同用 `role res` 设 `refpic` 图生图 |
+| 没建项目 | 空项目 → `workflow temp set` → `project key add`（先建章节）→ `role creates`（场景/角色/道具每项都必须带 `baseName`，不能为空；没有形态变化就填 `name`）→ `shot creates` |
+| 角色/场景没图 | 人物角色两步：① `run preview` → `role gen` 文生图「基准白底图四视图」（读 `promptBase` 提示词基准：脸型/五官/发型/饰品），产物落 `参考图`（`refPic`）→ ② `role gen` 图生图「一键四视图白底图」（输入 `参考图`=人脸 + `prompt`=衣着，输出 `配图`），第二步产物才是角色图；场景走正常文生图（输出配图）；人物和道具（类型 人物/其它）都先跑「基准白底图四视图」（绑 `promptBase`，输出参考图）——人物继续第二步图生图，道具类型自动落 `curPic`，确认 `curPic` 有图后无变体即完成，有变体再图生图改状态。同一角色换装：复用原形态 `refPic` 人脸参考（`role res` 设到新形态的 `refpic`），**不要重跑脸图，也不要用旧全身图**；同主体按 `baseName` 识别（同一主体的所有形态传同一个 `baseName`），纯换装建议 `promptBase` 与原形态一致。跨集同一角色：每集在各自章节建同名同形态角色，形象一致用 `role copy` 继承原图（含 `refPic`） |
 | 分镜没图 | 角色已绑且有图 → `run preview` → `shot gen`（融合工作流）；风格/分辨率不对先 `workflow customize set` / `workflow param set` |
 | 分镜没视频 | `shot set` 设 `time`（时长）→ `run preview` → `shot gen`（视频工作流） |
 | 分镜没配音 | 声音挂在角色上，先设计后绑定：`shot setaudiorole` 绑 `soundRoleSn` → `shot gen` 文本克隆工作流 |
