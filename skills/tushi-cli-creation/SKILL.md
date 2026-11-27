@@ -118,9 +118,9 @@ examples_en:
 | 分镜没图 | 角色已绑且有图 → `run preview` → `shot gen`（融合工作流）；风格/分辨率不对先 `workflow customize set` / `workflow param set` |
 | 分镜没视频 | `shot set` 设 `time`（时长）→ `run preview` → `shot gen`（视频工作流） |
 | 分镜没配音 | 声音挂在角色上，先设计后绑定：`shot setaudiorole` 绑 `soundRoleSn` → `shot gen` 文本克隆工作流 |
-| 齐了没导出 | `run qa` 无 issue → `export draft` / `export video`；导出后抽查 2~3 镜 `shot subtitle get` 核对字幕文本与时间码 |
+| 齐了没导出 | `run qa` 无 issue → `export draft` / `export video`；qa 默认按视频口径（必须有画面），走剪映草稿时加 `type:"draft"`（纯音频镜也算可导出）。导出后抽查 2~3 镜 `shot subtitle get` 核对字幕文本与时间码 |
 
-- 队列被占：等当前 job，或 `shot stop` / `role stop`；**不要 `run stop`**
+- 队列被占：短任务等当前 job；只想停某几镜的生成用 `shot stop` / `role stop`（同一批里其它镜继续跑）；停整条长任务（`export` / `shot subtitle extract`）用 `run stop <jobId>`，jobId 由 `run status`（不带 jobId 会列最近任务，含已结束）拿
 - 拿不准一律 `help` → `schema <命令名>`
 
 ## 视频反推复刻（参考片 → 复刻方案 → 分镜）
